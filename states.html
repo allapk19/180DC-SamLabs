@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>State Map</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> 
+
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+    <div id="map"></div>
+    
+    <div id="side-panel">
+      <div id="buttons">
+        <button onclick="document.location.href='districts.html';">Districts</button>
+        <button onclick="document.location.href='states.html';" class="selected">States</button>
+      </div>
+      <h2 id="state_name" style="display: none"></h2>
+      <ul id="spending_list" style="display: none"></ul>
+      <h2 id="noData">Select a state to view spending info</h2>
+    </div>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWl2eXMiLCJhIjoiY2tocDBpMWY2MDY5ZTJ2bzQzeXpycXlqNiJ9.8jY9tl5ZJqmQdIDBP0gDqQ';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            zoom: 2.5,
+            center: [-120.4, 36.0]
+        });
+
+        map.on('load', function () {
+            const csvUrl = '/state_data.csv';
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function (results) {
+                    map.once('idle', () => {
+                        console.log(results.data);
+                        results.data.forEach(row => {
+                            map.setFeatureState({
+                                source: 'aivys.states',
+                                sourceLayer: 'trees',
+                                                                
+                                id: row.States
+                            },
+                                {
+                                    total: row.TOTAL,
+                                    name: row.States,
+                                    popdens: row.PopulationDensity,
+                                    studpop: row.StudentPopulation,
+                                    dist: row.DistrictCount,
+                                    foss: row.Foss,
+                                    stemscopes: row.STEMScopes,
+                                    amplifyscience: row.AmplifyScience,
+                                    tynker: row.Tynker,	
+                                    minecraft: row.Minecraft,	
+                                    stemfuse: row.STEMFuse, 
+                                    techterra: row.TechTerraEdducation,
+                                    ngss: row.AllOtherNGSSCurriculum,
+                                    samlabs: row.SAMLabs,	
+                                    strawbees: row.StrawBees,	
+                                    arduino: row.Arduino,	
+                                    ozobot: row.Ozobot,
+                                    makey: row.MakeyMakey,	
+                                    dremel: row.Dremel,
+                                    bbc: row.BBCmicrobit,
+                                    edison: row.Edison,	
+                                    ubtech: row.UBTech,	
+                                    engino: row.Engino,
+                                    hololens: row.MicrosoftHololens,
+                                    classvr: row.ClassVR,
+                                    prusa: row.Prusa,
+                                    pitop: row.PiTop,
+                                    kinderlab: row.KinderlabRobotics,
+                                    xyzprinting: row.XYZPrinting,
+                                    makeblock: row.Makeblock,
+                                    bloxels: row.Bloxels,
+                                    robo3d: row.Robo3D,
+                                    htcvive: row.HTCVive,	
+                                    kano: row.Kano,
+                                    oculus: row.Oculus,	
+                                    glowforge: row.Glowforge,	
+                                    cubelets: row.Cubelets,	
+                                    bbtech: row.BirdbrainTechnology,
+                                    lulz: row.LulzBot,
+                                    bbots: row.BeeBots,	
+                                    rasppi: row.RaspberryPi,	
+                                    sparkfun: row.Sparkfun,
+                                    knew: row.KNex,
+                                    snapcirc: row.SnapCircuits,	
+                                    ultimaker: row.Ultimaker,
+                                    wworkshop: row.Wonderworkshop,	
+                                    littlebits: row.Littlebits,
+                                    sphero: row.Sphero,
+                                    zspace: row.ZSpace,	
+                                    ps: row.PascoScientific,	
+                                    makerbot: row.Makerbot,
+                                    pitsco: row.Pitsco,
+                                    vernier: row.Vernier,	
+                                    lego: row.LEGOEducation,	
+                                    vex: row.Vex
+                                });
+                        });
+
+                        map.addLayer({
+                            'id': 'state-fill',
+                            'type': 'fill',
+                            'source': 'aivys.states',
+                            'source-layer': 'trees',
+                            'layout': {},
+                            'paint': {
+                                'fill-color': 
+                                        [
+                                            'let', 'density', ['/', ['to-number', ['feature-state', 'total']], 894127],
+                                            ['interpolate', ['exponential', 0.9], ['var', 'density'], 0, '#edf8e9', 100, '#006d2c']
+                                        ],
+                                'fill-opacity': 0.9
+                            }
+
+                        });
+
+                        map.addLayer({
+                            'id': 'state-line',
+                            'type': 'line',
+                            'source': 'aivys.states',
+                            'source-layer': 'trees',
+                            'layout': {
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            'paint': {
+                                'line-color': '#D8CAC1',
+                                'line-width': 1
+                            }
+                        });
+
+
+                    })
+                }
+            });
+
+            map.addSource('aivys.states', {
+                type: 'vector',
+                url: 'mapbox://aivys.states',
+                promoteId: 'NAME'
+            });
+
+            var popup = new mapboxgl.Popup({
+              closeButton: false
+            });
+
+            // display popup on hover
+            map.on('mousemove', 'state-fill',  function (e) {      
+              var feature = e.features[0];
+              popup
+                .setLngLat(e.lngLat)
+                .setText(feature.id)
+                .addTo(map);
+            });
+            map.on('mouseleave', 'state-fill', function () {
+              map.getCanvas().style.cursor = '';
+              popup.remove();
+            });
+
+            // zoom to state on click
+            map.on('click', 'state-fill', function (e) {
+              var polygon = e.features[0].geometry.coordinates;
+              var fit = new L.Polygon(polygon).getBounds();
+              var southWest = new mapboxgl.LngLat(fit['_southWest']['lat'], fit['_southWest']['lng']);
+              var northEast = new mapboxgl.LngLat(fit['_northEast']['lat'], fit['_northEast']['lng']);
+              var center = new mapboxgl.LngLatBounds(southWest, northEast).getCenter();
+              map.fitBounds(new mapboxgl.LngLatBounds(southWest, northEast), {
+                padding: 250
+              });
+            });
+
+        });
+        
+        map.on("click", 'state-fill', function (e) {
+            var features = map.queryRenderedFeatures(e.point, { layers: ['state-fill'] });
+            var state = features[0].state;
+
+            $("#state_name").show();
+            $("#spending_list").show();
+            $("#noData").hide();
+            
+            $("#state_name").text(state.name);
+            $("#spending_list").empty();
+            $("#spending_list").append("<li><span class='spending_name'>Expenditure / Student:</span> <span class='spending_amount'>" + numberWithCommas(state.popdens) + "</span></li>");
+            $("#spending_list").append("<li><span class='spending_name'>Student Population:</span> <span class='spending_amount'>" + numberWithCommas(state.studpop) + "</span></li>");
+            $("#spending_list").append("<li><span class='spending_name'>Num Districts:</span> <span class='spending_amount'>" +numberWithCommas(state.dist) + "</span></li>");
+            $("#spending_list").append("<li><hr /></li>");
+
+            var competitors = [state.foss, state.stemscopes, state.amplifyscience, state.tynker, state.minecraft, state.stemfuse, state.techterra, state.ngss,
+                               state.samlabs, state.strawbees, state.arduino, state.ozobot, state.makey, state.dremel, state.bbc, state.edison, state.ubtech,
+                               state.engino, state.hololens, state.classvr, state.prusa, state.pitop, state.kinderlab, state.xyzprinting, state.makeblock, 
+                               state.bloxels, state.robo3d, state.htcvive, state.kano, state.oculus, state.glowforge, state.cubelets, state.bbtech, state.lulz, 
+                               state.bbots, state.rasppi, state.sparkfun, state.knew, state.snapcirc, state.ultimaker, state.wworkshop, state.littlebits, 
+                               state.sphero, state.zspace, state.ps, state.makerbot, state.pitsco, state.vernier, state.lego, state.vex];   
+            
+            var names = ['Foss', 'STEMScopes', 'Amplify Science', 'Tynker', 'Minecraft', 'STEMFuse', 'TechTerra Education', 'All Other NGSS Curriculum', 
+                         'SAM Labs', 'StrawBees', 'Arduino', 'Ozobot', 'Makey Makey', 'Dremel', 'BBC micro:bit', 'Edison', 'UBTech', 'Engino', 
+                         'Microsoft Hololens', 'ClassVR', 'Prusa', 'Pi-Top', 'Kinderlab Robotics', 'XYZPrinting', 'Makeblock', 'Bloxels', 'Robo 3D', 'HTC Vive', 
+                         'Kano', 'Oculus', 'Glowforge', 'Cubelets', 'Birdbrain Technology', 'LulzBot', 'Bee-Bots', 'Raspberry Pi', 'Sparkfun', "K'Nex", 
+                         'Snap Circuits', 'Ultimaker', 'Wonderworkshop', 'Littlebits', 'Sphero', 'ZSpace', 'Pasco Scientific', 'Makerbot', 'Pitsco', 'Vernier', 
+                         'LEGO Education', 'Vex'];
+            
+            for(var i = 0; i < competitors.length; i++) {
+              $("#spending_list").append("<li><span class='spending_name'>" + names[i] + ":</span> <span class='spending_amount'>" + numberWithCommas(competitors[i]) + "</span></li>");
+            }
+        });
+
+        function numberWithCommas(x) {
+          var str = x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+          if (str.indexOf(".") != -1) {
+            str = str.substring(0, str.indexOf("."));
+          }
+          return str;
+        }
+
+    </script>
+
+</body>
+
+</html>

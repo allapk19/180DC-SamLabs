@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>District Spending Information</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> 
+
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+    <div id="side-panel">
+      <div id="buttons">
+        <button onclick="document.location.href='districts.html';" class="selected">Districts</button>
+        <button onclick="document.location.href='states.html';">States</button>
+      </div>
+      <h2 id="district_name" style="display: none"></h2>
+      <ul id="spending_list" style="display: none"></ul>
+      <h2 id="noData">There is no data for this district</h2>
+    </div>
+    <div id="map"></div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+
+        var map_data = null;
+        $.ajax({
+          url: 'output.json',
+          dataType: 'json',
+          type: 'get',
+          async: false,
+          success: function(data) {
+            map_data = data
+          }
+        })
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYWxsYXBrIiwiYSI6ImNraGNsaXVhbjA5djQycnMybG9weWZ6dHcifQ.OKI0oOCUwI7k-MCcXJUM7Q';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10', //style url 
+            zoom: 4,
+            center: [-99.9, 41.5],
+        });
+
+        map.on('load', function () {
+            var clickedStateId = null;
+
+            map.addSource('school-districts', {
+                type: 'vector',
+                url: 'mapbox://allapk.6gbujyqe',
+            });
+
+            map.addSource('aivys.states', {
+                type: 'vector',
+                url: 'mapbox://aivys.states',
+                promoteId: 'NAME'
+            });
+
+            map.addLayer({
+              'id': 'state-line',
+              'type': 'line',
+              'source': 'aivys.states',
+              'source-layer': 'trees',
+              'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              'paint': {
+                'line-width': 0.75,
+              }
+            });
+
+            map.addLayer({
+              'id': 'state-fill',
+              'type': 'fill',
+              'source': 'aivys.states',
+              'source-layer': 'trees',
+              'paint': {
+                'fill-opacity': 0
+              }
+            });
+
+            map.addLayer({
+              'id': 'school-districts-line',
+              'type': 'line',
+              'source': 'school-districts',
+              'source-layer': 'us_school_districts',
+              'layout': {},
+              'paint': {
+                'line-width': 0.2,
+              }
+            });
+
+            map.addLayer({
+              'id': 'school-districts-fill',
+              'type': 'fill',
+              'source': 'school-districts',
+              'source-layer': 'us_school_districts',
+              'paint': {
+                'fill-color': '#64bdbb',
+                'fill-opacity': [
+                  'case',
+                  ['boolean', ['feature-state', 'click'], false],
+                  1,
+                  0
+                ]
+              }
+            });
+            
+            var popup = new mapboxgl.Popup({
+              closeButton: false
+            });
+
+            // display popup on hover
+            map.on('mousemove', 'school-districts-fill',  function (e) {
+              var feature = e.features[0];
+              popup
+                .setLngLat(e.lngLat)
+                .setText(feature.properties.name)
+                .addTo(map);
+            });
+            map.on('mouseleave', 'school-districts-fill', function () {
+              map.getCanvas().style.cursor = '';
+              popup.remove();
+            });
+
+            // zoom to state on click
+            map.on('click', 'state-fill', function (e) {
+              var polygon = e.features[0].geometry.coordinates;
+              var fit = new L.Polygon(polygon).getBounds();
+              var southWest = new mapboxgl.LngLat(fit['_southWest']['lat'], fit['_southWest']['lng']);
+              var northEast = new mapboxgl.LngLat(fit['_northEast']['lat'], fit['_northEast']['lng']);
+              var center = new mapboxgl.LngLatBounds(southWest, northEast).getCenter();
+              map.fitBounds(new mapboxgl.LngLatBounds(southWest, northEast), {
+                padding: 100
+              });
+            });
+
+            // get district information on click
+            map.on('click', 'school-districts-fill', function (e) {
+              district_data = map_data[e.features[0].id]
+              if (district_data['database_name'] != null) {
+                $("#district_name").text(district_data['database_name']);
+                $("#spending_list").empty();
+                Object.keys(district_data).forEach(function(key) {
+                  if (key != "database_name" && key != "map_name" && key != "state") {
+                    if (district_data[key] != 0) {
+                      $("#spending_list").append("<li><span class='spending_name'>" + key + ":</span> <span class='spending_amount'>$" + numberWithCommas(district_data[key]) + "</span></li>");
+                    }
+                  }
+                });
+                $("#district_name").show();
+                $("#spending_list").show();
+                $("#noData").hide();
+              } else {
+                $("#district_name").hide();
+                $("#spending_list").hide();
+                $("#noData").show();
+              }
+
+              // display popup on click
+              new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setText(e.features[0].properties.name)
+                .addTo(map);
+
+              // remove color from previously clicked district, and color clicked district
+              if (clickedStateId) {
+                map.setFeatureState(
+                  { source: 'school-districts', sourceLayer: 'us_school_districts', id: clickedStateId },
+                  { click: false }
+                );
+              }
+              clickedStateId = e.features[0].id;
+              map.setFeatureState(
+                { source: 'school-districts', sourceLayer: 'us_school_districts', id: clickedStateId },
+                { click: true }
+              );
+            });
+
+        });
+
+        function numberWithCommas(x) {
+          return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+    </script>
+
+</body>
+
+</html>

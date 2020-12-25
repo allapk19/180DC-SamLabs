@@ -1,0 +1,78 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#side-panel {
+  position: absolute;
+  left: 0;
+  width: 25%;
+  height: 100%;
+  background-color: #e6e6e6;
+  border-radius: 1vh;
+  color: #404040;
+  overflow: scroll;
+}
+
+#district_name, #state_name {
+  text-align: center;
+  padding: 10px 20px;
+}
+
+#spending_list {
+  list-style-type: none;
+  padding: 0px;
+  margin-left: 5vh;
+}
+
+#spending_list li {
+  padding-bottom: 7px;
+}
+
+#noData {
+  text-align: center;
+  padding: 35vh 20px;
+  color: #808080;
+}
+
+.spending_name {
+  width: 60%;
+  display: inline-block;
+}
+
+.spending_amount {
+  width: 40%;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 75%;
+}
+
+.mapboxgl-popup {
+  max-width: 400px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+.mapboxgl-popup {
+  max-width: 400px;
+  font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+#buttons {
+  text-align: center;
+  margin: 15px 10px;
+}
+#buttons > button {
+  width: 40%;
+  padding: 10px 0;
+  border-radius: 10px;
+  border: 1px solid grey;
+  cursor: pointer;
+}
+#buttons > .selected {
+  background-color: #64bdbb;
+}
