@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> 
 
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
@@ -38,7 +38,7 @@
         });
 
         map.on('load', function () {
-            const csvUrl = '/state_data.csv';
+            const csvUrl = 'state_data.csv';
             Papa.parse(csvUrl, {
                 download: true,
                 header: true,
